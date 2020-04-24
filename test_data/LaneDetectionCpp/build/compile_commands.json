@@ -1,0 +1,13 @@
+[
+{
+  "directory": "C:/Users/Olivera/Desktop/diplomski/LaneDetection/test_data/LaneDetectionCpp/build",
+  "command": "C:\\PROGRA~2\\MIB055~1\\2019\\COMMUN~1\\VC\\Tools\\MSVC\\1425~1.286\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP  -IC:\\opencv\\build\\include  /DWIN32 /D_WINDOWS /W3 /GR /EHsc /MDd /Zi /Ob0 /Od /RTC1   /FoCMakeFiles\\cvtest.dir\\main.cpp.obj /FdTARGET_COMPILE_PDB /FS -c C:\\Users\\Olivera\\Desktop\\diplomski\\LaneDetection\\test_data\\LaneDetectionCpp\\main.cpp",
+  "file": "C:/Users/Olivera/Desktop/diplomski/LaneDetection/test_data/LaneDetectionCpp/main.cpp"
+},
+
+{
+  "directory": "C:/Users/Olivera/Desktop/diplomski/LaneDetection/test_data/LaneDetectionCpp/build",
+  "command": "C:\\PROGRA~2\\MIB055~1\\2019\\COMMUN~1\\VC\\Tools\\MSVC\\1425~1.286\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP  -IC:\\opencv\\build\\include  /DWIN32 /D_WINDOWS /W3 /GR /EHsc /MDd /Zi /Ob0 /Od /RTC1   /FoCMakeFiles\\cvtest.dir\\functions.cpp.obj /FdTARGET_COMPILE_PDB /FS -c C:\\Users\\Olivera\\Desktop\\diplomski\\LaneDetection\\test_data\\LaneDetectionCpp\\functions.cpp",
+  "file": "C:/Users/Olivera/Desktop/diplomski/LaneDetection/test_data/LaneDetectionCpp/functions.cpp"
+}
+]
