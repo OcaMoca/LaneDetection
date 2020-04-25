@@ -11,5 +11,8 @@
 using namespace cv;
 using namespace std;
 
-Mat color_filter(Mat image);
-Mat perspective_transform(Mat image);
+Mat color_filter(Mat);
+Mat perspective_transform(Mat);
+Mat get_histogram(Mat);
+Mat sliding_window(Mat);
+

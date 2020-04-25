@@ -11,7 +11,8 @@ int main(int, char**) {
     auto image = cv::imread(file); // tip je cv::Mat
 
     filtered_image = perspective_transform(image);
-    cv::imshow("image", filtered_image);
-    cv::waitKey();
+    filtered_image = sliding_window(filtered_image);
+    //cv::imshow("image", filtered_image);
+    //cv::waitKey();
 
 }
