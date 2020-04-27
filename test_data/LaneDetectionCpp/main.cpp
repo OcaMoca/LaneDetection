@@ -1,18 +1,18 @@
 
 #include "functions.hpp"
 
-
 int main(int, char**) {
-    std::cout << "OpenCV project!\n";
+    cout << "OpenCV project!\n";
 
-    cv::Mat filtered_image;
+    Mat filtered_image;
+    Mat res;
     
-    auto file = "C:\\Users\\Olivera\\Desktop\\diplomski\\LaneDetection\\test_data\\test_images\\solidWhiteCurve.jpg";
+    auto file = "C:\\Users\\Olivera\\Desktop\\diplomski\\LaneDetection\\test_data\\test_images\\solidYellowCurve.jpg";
     auto image = cv::imread(file); // tip je cv::Mat
 
     filtered_image = perspective_transform(image);
-    filtered_image = sliding_window(filtered_image);
-    //cv::imshow("image", filtered_image);
-    //cv::waitKey();
+    res = sliding_window(filtered_image);
+    imshow("image", res);
+    waitKey();
 
 }

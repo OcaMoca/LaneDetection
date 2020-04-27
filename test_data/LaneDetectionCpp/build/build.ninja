@@ -251,6 +251,14 @@ build CMakeFiles\cvtest.dir\functions.cpp.obj: CXX_COMPILER__cvtest_Debug ..\fun
   TARGET_COMPILE_PDB = CMakeFiles\cvtest.dir\
   TARGET_PDB = cvtest.pdb
 
+build CMakeFiles\cvtest.dir\window.cpp.obj: CXX_COMPILER__cvtest_Debug ..\window.cpp || cmake_object_order_depends_target_cvtest_DEBUG
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /GR /EHsc /MDd /Zi /Ob0 /Od /RTC1
+  INCLUDES = -IC:\opencv\build\include
+  OBJECT_DIR = CMakeFiles\cvtest.dir
+  OBJECT_FILE_DIR = CMakeFiles\cvtest.dir
+  TARGET_COMPILE_PDB = CMakeFiles\cvtest.dir\
+  TARGET_PDB = cvtest.pdb
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target cvtest
@@ -259,7 +267,7 @@ build CMakeFiles\cvtest.dir\functions.cpp.obj: CXX_COMPILER__cvtest_Debug ..\fun
 #############################################
 # Link the executable cvtest.exe
 
-build cvtest.exe: CXX_EXECUTABLE_LINKER__cvtest_Debug CMakeFiles\cvtest.dir\main.cpp.obj CMakeFiles\cvtest.dir\functions.cpp.obj | C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib
+build cvtest.exe: CXX_EXECUTABLE_LINKER__cvtest_Debug CMakeFiles\cvtest.dir\main.cpp.obj CMakeFiles\cvtest.dir\functions.cpp.obj CMakeFiles\cvtest.dir\window.cpp.obj | C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib C$:\opencv\build\x64\vc15\lib\opencv_world412d.lib
   FLAGS = /DWIN32 /D_WINDOWS /W3 /GR /EHsc /MDd /Zi /Ob0 /Od /RTC1
   LINK_FLAGS = /machine:x64 /debug /INCREMENTAL /subsystem:console
   LINK_LIBRARIES = C:\opencv\build\x64\vc15\lib\opencv_world412d.lib  C:\opencv\build\x64\vc15\lib\opencv_world412d.lib  C:\opencv\build\x64\vc15\lib\opencv_world412d.lib  C:\opencv\build\x64\vc15\lib\opencv_world412d.lib  C:\opencv\build\x64\vc15\lib\opencv_world412d.lib  C:\opencv\build\x64\vc15\lib\opencv_world412d.lib  C:\opencv\build\x64\vc15\lib\opencv_world412d.lib  C:\opencv\build\x64\vc15\lib\opencv_world412d.lib  C:\opencv\build\x64\vc15\lib\opencv_world412d.lib  C:\opencv\build\x64\vc15\lib\opencv_world412d.lib  C:\opencv\build\x64\vc15\lib\opencv_world412d.lib  C:\opencv\build\x64\vc15\lib\opencv_world412d.lib  C:\opencv\build\x64\vc15\lib\opencv_world412d.lib  C:\opencv\build\x64\vc15\lib\opencv_world412d.lib  C:\opencv\build\x64\vc15\lib\opencv_world412d.lib  C:\opencv\build\x64\vc15\lib\opencv_world412d.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib

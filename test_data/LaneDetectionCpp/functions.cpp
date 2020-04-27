@@ -2,6 +2,7 @@
 
 Mat color_filter(Mat image)
 {
+    Mat mask;
     Mat mask1;
     Mat mask2;
     Mat image_hsv;
@@ -12,9 +13,10 @@ Mat color_filter(Mat image)
     inRange(image, Scalar(200,200,200), Scalar(255,255,255), mask1);
 
     cvtColor(image, image_hsv, COLOR_BGR2HSV);
-    inRange(image_hsv, Scalar(90,72,100), Scalar(110,255,255), mask2);
-    
+    inRange(image_hsv, Scalar(20,70,100), Scalar(100,255,255), mask2);
+
     bitwise_and(image, image, white_image, mask1);
+    
     bitwise_and(image, image, yellow_image, mask2);
     
     addWeighted(white_image, 1., yellow_image, 1., 0., filtered_image);
@@ -82,84 +84,52 @@ Mat get_histogram(Mat binary_warped)
 
 Mat sliding_window(Mat binary_warped)
 {
+   
     int N_windows;
     int window_width;
     int window_height;
-    int min_pix;
     int midpoint;
-    Mat output_image;
-    Mat histogram;
+    int left_x_current, right_x_current;
+
     Mat left_x_base;
     Mat right_x_base;
-    int left_x_current;
-    int right_x_current;
-    vector<Point2d> non_zero;
-    vector<double> non_zero_x;
-    vector<double> non_zero_y;
-    vector<Point2d> left_lane_inds;
-    vector<Point2d> right_lane_inds;
-    Point peak_left, peak_right;
+    Point left_peak, right_peak;
+    
+    Mat histogram;
+    Mat output_image;
+    Mat gray_tmp;
 
     N_windows = 9;
     window_width = 80;
-    window_height = binary_warped.cols / N_windows;
-    min_pix = 50;
+    window_height = binary_warped.rows / N_windows;
     
+    
+    gray_tmp = binary_warped.clone();
 
-    histogram = get_histogram(binary_warped);
+    cvtColor(binary_warped, output_image, COLOR_GRAY2BGR);
 
+    histogram = get_histogram(gray_tmp);
     midpoint = histogram.cols / 2;
     left_x_base = histogram.colRange(0,midpoint);
     right_x_base = histogram.colRange(midpoint,histogram.cols);
 
-    minMaxLoc(left_x_base, NULL, NULL, NULL, &peak_left);
-	minMaxLoc(right_x_base,NULL, NULL, NULL, &peak_right);
+    minMaxLoc(left_x_base, NULL, NULL, NULL, &left_peak);
+	minMaxLoc(right_x_base,NULL, NULL, NULL, &right_peak);
 
-	peak_right = peak_right + Point(midpoint, 0);
+	right_peak = right_peak + Point(midpoint, 0);
 
-    left_x_current = peak_left.x;
-    right_x_current = peak_right.x;
+    Window window_left(binary_warped, left_peak.x, output_image.rows - window_height, window_width, window_height, 50);
+    Window window_right(binary_warped, right_peak.x, output_image.rows - window_height, window_width, window_height, 50);
 
-	//right_max_loc = right_max_loc + cv::Point(midpoint, 0);
-    findNonZero(binary_warped, non_zero);
+    for(int i = 0; i < N_windows; ++i)
+    {
+        rectangle(output_image, window_left.get_bottom_left_point(), window_left.get_top_right_point(), Scalar(0,255, 0), 2);
+        rectangle(output_image, window_right.get_bottom_left_point(), window_right.get_top_right_point(), Scalar(0,255, 0), 2);
 
-    for (int i = 0; i < non_zero.size(); i++){
-        non_zero_x.push_back(non_zero[i].x);
-        non_zero_y.push_back(non_zero[i].y);
+        window_left = window_left.get_next_window(gray_tmp);
+        window_right = window_right.get_next_window(gray_tmp);
 
     }
-
-    int win_y_low;
-    int win_y_high;
-    int win_x_left_low;
-    int win_x_left_high;
-    int win_x_right_low;
-    int win_x_right_high;
-
-    for(int i = 0; i < N_windows; i++)
-    {
-        win_y_low = int(binary_warped.rows - (i + 1) * window_height);
-        win_y_high = int(binary_warped.rows- i * window_height);
-        win_x_left_low = left_x_current - window_width;
-        win_x_left_high = left_x_current + window_width;
-        win_x_right_low = right_x_current - window_width;
-        win_x_right_high = right_x_current + window_width;
-
-        Point2d bottom_left_lane_left(win_x_left_low,win_y_low);
-        Point2d top_right_lane_left(win_x_left_high,win_y_high);
-        Point2d bottom_right_lane_right(win_x_right_low,win_y_low);
-        Point2d top_right_lane_right(win_x_right_high,win_y_high);
-
-        rectangle(output_image,bottom_left_lane_left,top_right_lane_left,(0,255,0));
-        rectangle(output_image,bottom_right_lane_right,top_right_lane_right,(0,255,0));
-
-        /*compare(non_zero_y, win_y_low, good_left_inds, CMP_GE);
-        compare()
-        findNonZero(((non_zero_y >= win_y_low) & (non_zero_y < win_y_high) & (non_zero_x >= win_x_left_low) & (non_zero_x < win_x_left_high))[0],good_left_inds);
-*/
-        
-        }
-
-    return binary_warped;
+    return output_image;
  
 }
