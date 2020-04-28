@@ -23,6 +23,8 @@ class Window
         int min_pix;
         Mat window;
         vector<Point> non_zero;
+        vector<double> non_zero_x;
+        vector<double> non_zero_y;
 
       
 
@@ -34,7 +36,13 @@ class Window
         Window(Mat& binary_warped, int x_center, int y_top,
 		int width, int height, int min_pix);
 
-        int count_nonzero(void) { return (int)non_zero.size(); }
+        vector<double> get_non_zero_x(void) { return non_zero_x; }
+        vector<double> get_non_zero_y(void) { return non_zero_y; }
+
+       
+        void get_indices(Mat&, Mat&) const;
+
+        int count_nonzero(void) const { return (int)non_zero.size(); }
         const Point get_bottom_left_point(void) const { return Point(x_left, y_bottom);}
         const Point get_top_right_point(void) const { return Point(x_right, y_top); }
         Window get_next_window(Mat& binary_warped);
