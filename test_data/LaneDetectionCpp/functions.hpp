@@ -14,6 +14,6 @@ void poly_fit_x(vector<double> const&, vector<double>&, Mat const&);
 Mat color_filter(Mat);
 Mat perspective_transform(Mat);
 Mat get_histogram(Mat);
-Mat sliding_window(Mat, vector<double>& , vector<double>& , vector<double>& );
+Mat sliding_window(Mat, Mat&, Mat&);
 Mat inverse_perspective(Mat, Mat);
 

@@ -63,8 +63,8 @@ void Window::get_indices(Mat& x, Mat& y) const
 
 	int npoints = count_nonzero();
 
-	x = Mat::zeros(npoints, 1, CV_8UC1);
-	y = Mat::zeros(npoints, 1, CV_8UC1);
+	x = Mat::zeros(npoints, 1, CV_64FC1);
+	y = Mat::zeros(npoints, 1, CV_64FC1);
 
 	for (int i = 0; i < npoints; i++)
     {

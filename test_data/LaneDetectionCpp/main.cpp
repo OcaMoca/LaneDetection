@@ -5,15 +5,15 @@ int main(int, char**) {
     cout << "OpenCV project!\n";
 
     Mat filtered_image;
-    Mat res;
+    Mat result;
     
-    const char* file = "C:\\Users\\Olivera\\Desktop\\diplomski\\LaneDetection\\test_data\\test_images\\solidWhiteRight.jpg";
+    const char* file = "C:\\Users\\Olivera\\Desktop\\diplomski\\LaneDetection\\test_data\\test_images\\curved.jpg";
     Mat image = cv::imread(file); 
     vector<double> ploty, left_fit_x, right_fit_x;
 
     filtered_image = perspective_transform(image);
-    res = sliding_window(filtered_image, ploty, left_fit_x, right_fit_x);
-    imshow("image", res);
+    result = inverse_perspective(filtered_image, image);
+    imshow("image", result);
     waitKey();
 
 }

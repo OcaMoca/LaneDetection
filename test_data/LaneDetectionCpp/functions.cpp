@@ -3,7 +3,7 @@
 void polyfit(const Mat& src_x, const Mat&  src_y, Mat& dst, int order)
 {
 	Mat X;
-	X = Mat::zeros(src_x.rows, order + 1, CV_32FC1);
+	X = Mat::zeros(src_x.rows, order + 1, CV_64FC1);
 
 	Mat copy;
 	for (int i = 0; i <= order; i++)
@@ -73,7 +73,7 @@ Mat polyfit_windows(vector<Window> const& windows)
 	vconcat(x_mat, xs);
 	vconcat(y_mat, ys);
 
-	Mat fit = Mat::zeros(3, 1, CV_32F);
+	Mat fit = Mat::zeros(3, 1, CV_64FC1);
 
 	polyfit(ys, xs, fit, 2);
 
@@ -86,7 +86,7 @@ void poly_fit_x(vector<double> const& ploty, std::vector<double>& fit_x, Mat con
 {
 
 	for (auto const& y : ploty) {
-		double x = line_fit.at<float>(2, 0) * y * y + line_fit.at<float>(1, 0) * y + line_fit.at<float>(0, 0);
+		double x = line_fit.at<double>(2, 0) * y * y + line_fit.at<double>(1, 0) * y + line_fit.at<double>(0, 0);
 		fit_x.push_back(x);
 	}
 
@@ -173,7 +173,7 @@ Mat get_histogram(Mat binary_warped)
 	return histogram;
 }
 
-Mat sliding_window(Mat binary_warped, vector<double>& ploty, vector<double>& left_fit_x, vector<double>& right_fit_x)
+Mat sliding_window(Mat binary_warped, Mat& left_fit, Mat& right_fit)
 {
    
     int N_windows;
@@ -203,13 +203,12 @@ Mat sliding_window(Mat binary_warped, vector<double>& ploty, vector<double>& lef
     right_x_base = histogram.colRange(midpoint,histogram.cols);
 
     minMaxLoc(left_x_base, NULL, NULL, NULL, &left_peak);
-	minMaxLoc(right_x_base,NULL, NULL, NULL, &right_peak);
+    minMaxLoc(right_x_base,NULL, NULL, NULL, &right_peak);
 
-	right_peak = right_peak + Point(midpoint, 0);
+    right_peak = right_peak + Point(midpoint, 0);
 
     Window window_left(binary_warped, left_peak.x, binary_warped.rows - window_height, window_width, window_height, 50);
     Window window_right(binary_warped, right_peak.x, binary_warped.rows - window_height, window_width, window_height, 50);
-
 
     vector<Window> left_boxes, right_boxes;
 
@@ -226,28 +225,22 @@ Mat sliding_window(Mat binary_warped, vector<double>& ploty, vector<double>& lef
 
     }
 
-    Mat left_fit = polyfit_windows(left_boxes);
-    Mat right_fit = polyfit_windows(right_boxes);
-
-    ploty = linespace(0, output_image.rows - 1, output_image.rows);
-
-    poly_fit_x(ploty, left_fit_x, left_fit);
-    poly_fit_x(ploty, left_fit_x, left_fit);
-
+    left_fit = polyfit_windows(left_boxes);
+    right_fit = polyfit_windows(right_boxes);
 
     return output_image;
  
 }
 
-/*
 Mat inverse_perspective(Mat binary_warped, Mat original)
 {
     Mat sliding_window_output;
     vector<double> left_fit_x, right_fit_x, ploty;
     Mat Minv(2,4,CV_32FC2);
+    Mat left_fit, right_fit;
     Mat output_image;
     Mat color_warp = Mat::zeros(original.size(), CV_8UC3);
-    vector<Point2d> src,dst;
+    vector<Point2f> src,dst;
 
     int width = binary_warped.size().width;
     int height = binary_warped.size().height;
@@ -256,7 +249,7 @@ Mat inverse_perspective(Mat binary_warped, Mat original)
     double trap_top_width    = 0.1;
     double trap_height       = 0.38;
 
-    sliding_window_output = sliding_window(binary_warped, ploty,left_fit_x, right_fit_x);
+    sliding_window_output = sliding_window(binary_warped, left_fit, right_fit);
 
     src.push_back(Point2d( (width * (1 - trap_bottom_width)) / 2, (double)(height - 50)));
     src.push_back(Point2d( (width * (1 - trap_top_width)) / 2, height - height * trap_height));
@@ -272,31 +265,36 @@ Mat inverse_perspective(Mat binary_warped, Mat original)
 
     warpPerspective(sliding_window_output, output_image, Minv, sliding_window_output.size(),INTER_LINEAR);
 
-    /*int npoints = ploty.size();
-    vector<cv::Point> pts_left(npoints), pts_right(npoints), pts;
+    ploty = linespace(0, output_image.rows - 1, output_image.rows);
 
-	for (int i = 0; i < npoints; i++) {
-		pts_left[i] = Point(left_fitx[i], ploty[i]);
-		pts_right[i] = Point(right_fitx[i], ploty[i]);
+    poly_fit_x(ploty, left_fit_x, left_fit);
+    poly_fit_x(ploty, right_fit_x, right_fit);
 
-	}
+    int npoints = (int)ploty.size();
+    vector<Point> pts_left(npoints);
+    vector<Point>  pts_right(npoints);
+    vector<Point> pts;
 
-	pts.reserve(2 * npoints);
-	pts.insert(pts.end(), pts_left.begin(), pts_left.end());
-	pts.insert(pts.end(), pts_right.rbegin(), pts_right.rend());
+    for (int i = 0; i < npoints; i++) {
+      pts_left.push_back(Point2d((double)left_fit_x[i], (double)ploty[i])); 
+      pts_right.push_back(Point2d((double)right_fit_x[i], (double)ploty[i]));
+    }
 
-	vector<vector<Point>> ptsarray{ pts };
+    pts.reserve(2 * ploty.size());
+    pts.insert(pts.end(), pts_left.begin(), pts_left.end());
+    pts.insert(pts.end(), pts_right.rbegin(), pts_right.rend());
 
-	fillPoly(color_warp, ptsarray, Scalar(0, 255, 0));
+    vector<vector<Point>> ptsarray{ pts };
 
+    fillPoly(color_warp, ptsarray, Scalar(0, 255, 0));
 
-	Mat new_warp;
-	perspective_warp(color_warp, new_warp, Minv);
-	addWeighted(original, 1, new_warp, 0.3, 0, output_image);
+    Mat new_warp;
 
+    warpPerspective(color_warp, new_warp, Minv, color_warp.size(),INTER_LINEAR);
+
+    addWeighted(original, 1, new_warp, 0.3, 0, output_image);
 
     return output_image;
-}
-    */
 
+}
 
