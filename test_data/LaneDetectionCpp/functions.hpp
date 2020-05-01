@@ -1,10 +1,12 @@
 #include <thread>
+#include <chrono> 
+#include <filesystem>
 #include <iostream>
 #include <algorithm> 
-#include <numeric>
+
+#include <functional> 
 #include <opencv2/videoio.hpp>  // Video write
 #include "window.hpp"
-
 
 void polyfit(const Mat&, const Mat&, Mat&, int);
 vector<double> linespace(double, double, int);

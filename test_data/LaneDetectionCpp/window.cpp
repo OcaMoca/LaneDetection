@@ -20,15 +20,20 @@ Window::Window(Mat& binary_warped, int x_center, int y_top, int width, int heigh
     window = binary_warped(rect);
     findNonZero(window, non_zero);
 
+    for(Point const& pt: non_zero)
+    {
+        non_zero_x.push_back(pt.x);
+        non_zero_y.push_back(pt.y);
+    }
+
 }
 
 Window Window::get_next_window(Mat& binary_warped)
 {
-    int sum;
+    int sum = 0;
     int cnt_nonzeros;
     cnt_nonzeros = count_nonzero();
 
-    cout << cnt_nonzeros << endl;
     if(this->y_top == 0) return Window(); //if it's the end of window chain
 
     int new_y_top = y_top - height;
@@ -36,17 +41,8 @@ Window Window::get_next_window(Mat& binary_warped)
 
     if (cnt_nonzeros >= min_pix)
     {
-        sum = 0;
-        for(Point const& pt: non_zero)
-        {
-            sum += (pt.x + x_left);
-            non_zero_x.push_back(pt.x);
-            non_zero_y.push_back(pt.y);
-        }
-
-        new_x_center = sum / (int)non_zero.size();
+        new_x_center = (int)trim_mean(non_zero_x, 0.4, x_left);
     }
-    
 
     if(new_x_center + this->width / 2 > binary_warped.cols) return Window();
 

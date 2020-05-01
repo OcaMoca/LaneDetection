@@ -3,6 +3,7 @@
 #define __WINDOW_H__
 
 #include <vector>
+#include <numeric>
 #include <ostream>
 #include <opencv2/core.hpp>
 #include <opencv2/opencv.hpp>
@@ -41,6 +42,19 @@ class Window
 
        
         void get_indices(Mat&, Mat&) const;
+
+        double trim_mean(vector<double>& arr, double proportion, int x_margin)
+        {
+            int trim = (int)(arr.size() * proportion);
+
+            arr.erase(arr.begin(), arr.begin() + trim);
+            arr.erase(arr.end() - trim, arr.end());
+
+            double average = (double)(accumulate( arr.begin(), arr.end(), 0.0) + arr.size()*x_margin) / arr.size();
+
+            return average;
+
+        }
 
         int count_nonzero(void) const { return (int)non_zero.size(); }
         const Point get_bottom_left_point(void) const { return Point(x_left, y_bottom);}

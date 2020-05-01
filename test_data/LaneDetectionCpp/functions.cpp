@@ -1,6 +1,6 @@
 #include "functions.hpp"
 
-void polyfit(const Mat& src_x, const Mat&  src_y, Mat& dst, int order)
+void polyfit(const Mat& src_x, const Mat& src_y, Mat& dst, int order)
 {
 	Mat X;
 	X = Mat::zeros(src_x.rows, order + 1, CV_64FC1);
@@ -62,7 +62,8 @@ Mat polyfit_windows(vector<Window> const& windows)
 
 	Mat x_temp, y_temp;
 
-	for (Window const& window : windows) {
+	for (Window const& window : windows)
+  {
 		window.get_indices(x_temp, y_temp);
 		x_mat.push_back(x_temp);
 		y_mat.push_back(y_temp);
@@ -84,7 +85,6 @@ Mat polyfit_windows(vector<Window> const& windows)
 
 void poly_fit_x(vector<double> const& ploty, std::vector<double>& fit_x, Mat const& line_fit)
 {
-
 	for (auto const& y : ploty) {
 		double x = line_fit.at<double>(2, 0) * y * y + line_fit.at<double>(1, 0) * y + line_fit.at<double>(0, 0);
 		fit_x.push_back(x);
@@ -107,7 +107,7 @@ Mat color_filter(Mat image)
     inRange(image, Scalar(200,200,200), Scalar(255,255,255), mask1);
 
     cvtColor(image, image_hsv, COLOR_BGR2HSV);
-    inRange(image_hsv, Scalar(20,90,100), Scalar(50,255,255), mask2);
+    inRange(image_hsv, Scalar(20,90,100), Scalar(40,255,255), mask2);
 
     bitwise_and(image, image, white_image, mask1);
     
@@ -162,13 +162,14 @@ Mat perspective_transform(Mat image)
 
 }
 
+
 Mat get_histogram(Mat binary_warped)
 {
-    MatND histogram;
-    Mat half_image;
+  Mat histogram;
+  Mat half_image;
 
-    half_image = binary_warped(Rect(0, binary_warped.rows / 2, binary_warped.cols, binary_warped.rows / 2));
-	reduce(half_image / 255, histogram, 0, REDUCE_SUM, CV_32S);
+  half_image = binary_warped(Rect(0, binary_warped.rows / 2, binary_warped.cols, binary_warped.rows / 2));
+	reduce(half_image / 255, histogram, 0, REDUCE_SUM, CV_32FC2);
 
 	return histogram;
 }
@@ -245,9 +246,9 @@ Mat inverse_perspective(Mat binary_warped, Mat original)
     int width = binary_warped.size().width;
     int height = binary_warped.size().height;
 
-    double trap_bottom_width = 0.7;
-    double trap_top_width    = 0.1;
-    double trap_height       = 0.38;
+    double trap_bottom_width = 0.7; 
+    double trap_top_width = 0.1; 
+    double trap_height = 0.38; 
 
     sliding_window_output = sliding_window(binary_warped, left_fit, right_fit);
 
