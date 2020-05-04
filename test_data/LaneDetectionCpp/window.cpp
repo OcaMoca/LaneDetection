@@ -20,10 +20,9 @@ Window::Window(Mat& binary_warped, int x_center, int y_top, int width, int heigh
     window = binary_warped(rect);
     findNonZero(window, non_zero);
 
-    for(Point const& pt: non_zero)
+    for(Point2f const& pt: non_zero)
     {
         non_zero_x.push_back(pt.x);
-        non_zero_y.push_back(pt.y);
     }
 
 }
@@ -41,7 +40,7 @@ Window Window::get_next_window(Mat& binary_warped)
 
     if (cnt_nonzeros >= min_pix)
     {
-        new_x_center = (int)trim_mean(non_zero_x, 0.4, x_left);
+        new_x_center = (int)(accumulate( non_zero_x.begin(), non_zero_x.end(), 0.0) / cnt_nonzeros) + x_left;
     }
 
     if(new_x_center + this->width / 2 > binary_warped.cols) return Window();
@@ -59,13 +58,13 @@ void Window::get_indices(Mat& x, Mat& y) const
 
 	int npoints = count_nonzero();
 
-	x = Mat::zeros(npoints, 1, CV_64FC1);
-	y = Mat::zeros(npoints, 1, CV_64FC1);
+	x = Mat::zeros(npoints, 1, CV_32FC1);
+	y = Mat::zeros(npoints, 1, CV_32FC1);
 
 	for (int i = 0; i < npoints; i++)
     {
-		x.at<double>(i, 0) = non_zero[i].x + x_left;
-		y.at<double>(i, 0) = non_zero[i].y + y_bottom;
+		x.at<float>(i, 0) = non_zero[i].x + x_left;
+		y.at<float>(i, 0) = non_zero[i].y + y_bottom;
 	}
 
 	return;

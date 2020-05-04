@@ -2,8 +2,12 @@
 
 void polyfit(const Mat& src_x, const Mat& src_y, Mat& dst, int order)
 {
+
+  CV_Assert((src_x.rows > 0) && (src_y.rows > 0) && (src_x.cols == 1) && (src_y.cols == 1)
+		&& (dst.cols == 1) && (dst.rows == (order + 1)) && (order >= 1));
+
 	Mat X;
-	X = Mat::zeros(src_x.rows, order + 1, CV_64FC1);
+	X = Mat::zeros(src_x.rows, order + 1, CV_32FC1);
 
 	Mat copy;
 	for (int i = 0; i <= order; i++)
@@ -25,13 +29,13 @@ void polyfit(const Mat& src_x, const Mat& src_y, Mat& dst, int order)
 
 }
 
-vector<double> linespace(double start_in, double end_in, int num_in)
+vector<float> linespace(float start_in, float end_in, int num_in)
 {
-  vector<double> linspaced;
+  vector<float> linspaced;
 
-  double start = static_cast<double>(start_in);
-  double end = static_cast<double>(end_in);
-  double num = static_cast<double>(num_in);
+  float start = static_cast<float>(start_in);
+  float end = static_cast<float>(end_in);
+  float num = static_cast<float>(num_in);
 
   if (num == 0) { return linspaced; }
   if (num == 1) 
@@ -40,7 +44,7 @@ vector<double> linespace(double start_in, double end_in, int num_in)
       return linspaced;
     }
 
-  double delta = (end - start) / (num - 1);
+  float delta = (end - start) / (num - 1);
 
   for(int i=0; i < num-1; ++i)
     {
@@ -74,7 +78,7 @@ Mat polyfit_windows(vector<Window> const& windows)
 	vconcat(x_mat, xs);
 	vconcat(y_mat, ys);
 
-	Mat fit = Mat::zeros(3, 1, CV_64FC1);
+	Mat fit = Mat::zeros(3, 1, CV_32FC1);
 
 	polyfit(ys, xs, fit, 2);
 
@@ -83,10 +87,10 @@ Mat polyfit_windows(vector<Window> const& windows)
 }
 
 
-void poly_fit_x(vector<double> const& ploty, std::vector<double>& fit_x, Mat const& line_fit)
+void poly_fit_x(vector<float> const& ploty, std::vector<float>& fit_x, Mat const& line_fit)
 {
 	for (auto const& y : ploty) {
-		double x = line_fit.at<double>(2, 0) * y * y + line_fit.at<double>(1, 0) * y + line_fit.at<double>(0, 0);
+		float x = line_fit.at<float>(2, 0) * y * y + line_fit.at<float>(1, 0) * y + line_fit.at<float>(0, 0);
 		fit_x.push_back(x);
 	}
 
@@ -94,62 +98,65 @@ void poly_fit_x(vector<double> const& ploty, std::vector<double>& fit_x, Mat con
 }
 
 
-Mat color_filter(Mat image)
+void trapezoid_roi(const Mat& image, vector<Point2f>& src, vector<Point2f>& dst, float trap_bottom_width, float trap_top_width , float trap_height, float car_hood)
 {
-    Mat mask;
+    int width = (int)image.size().width;
+    int height = (int)image.size().height;
+
+    src.push_back(Point2f( (width * (1 - trap_bottom_width)) / 2, height - car_hood));
+    src.push_back(Point2f( (width * (1 - trap_top_width)) / 2, height - height * trap_height));
+    src.push_back(Point2f( width - (width * (1 - trap_top_width)) / 2, height - height * trap_height));
+    src.push_back(Point2f( width - (width * (1 - trap_bottom_width)) / 2, height - car_hood));
+
+    dst.push_back(Point2f( ( width * (1 - trap_bottom_width)) / 2 , (float)height));
+    dst.push_back(Point2f( ( width * (1 - trap_bottom_width)) / 2, 0.0));
+    dst.push_back(Point2f( width - (width * (1 - trap_bottom_width)) / 2, 0.0));
+    dst.push_back(Point2f( width - (width * (1 - trap_bottom_width)) / 2, (float)height));
+
+    return;
+
+}
+
+void color_filter(const Mat& image, Mat& filtered_image)
+{
     Mat mask1;
     Mat mask2;
     Mat image_hsv;
     Mat white_image;
     Mat yellow_image;
-    Mat filtered_image;
 
-    inRange(image, Scalar(200,200,200), Scalar(255,255,255), mask1);
+    cv::inRange(image, Scalar(200,200,200), Scalar(255,255,255), mask1);
 
-    cvtColor(image, image_hsv, COLOR_BGR2HSV);
-    inRange(image_hsv, Scalar(20,90,100), Scalar(40,255,255), mask2);
+    cvtColor(image, image_hsv, COLOR_RGB2HSV);
+    //inRange(image_hsv, Scalar(20,90,100), Scalar(50,255,255), mask2);
 
-    bitwise_and(image, image, white_image, mask1);
+    cv::inRange(image_hsv, Scalar(90,72,100), Scalar(110,255,255), mask2);
+
+    cv::bitwise_and(image, image, white_image, mask1);
     
-    bitwise_and(image, image, yellow_image, mask2);
+    cv::bitwise_and(image, image, yellow_image, mask2);
     
     addWeighted(white_image, 1., yellow_image, 1., 0., filtered_image);
 
-    return filtered_image;
+    
 }
 
 
-Mat perspective_transform(Mat image)
+void perspective_transform(const Mat& image, Mat& binary_warped)
 {
     Mat color_filtered_image;
     Mat gray;
     Mat binary_threshold;
     Mat M(2,4,CV_32FC2);
-    
-    Mat binary_warped;
-    vector<Point2f> src;
-    vector<Point2f> dst;
+    vector<Point2f> src, dst;
+ 
 
-    int width = image.size().width;
-    int height = image.size().height;
-
-    double trap_bottom_width = 0.7;
-    double trap_top_width    = 0.1;
-    double trap_height       = 0.38;
-
-    src.push_back(Point2d( (width * (1 - trap_bottom_width)) / 2, (double)(height - 50)));
-    src.push_back(Point2d( (width * (1 - trap_top_width)) / 2, height - height * trap_height));
-    src.push_back(Point2d( width - (width * (1 - trap_top_width)) / 2, height - height * trap_height));
-    src.push_back(Point2d( width - (width * (1 - trap_bottom_width)) / 2, (double)(height - 50)));
-
-    dst.push_back(Point2d( ( width * (1 - trap_bottom_width)) / 2 , (double)height));
-    dst.push_back(Point2d( ( width * (1 - trap_bottom_width)) / 2, 0.0));
-    dst.push_back(Point2d( width - (width * (1 - trap_bottom_width)) / 2, 0.0));
-    dst.push_back(Point2d( width - (width * (1 - trap_bottom_width)) / 2, (double)height));
-
-    color_filtered_image = color_filter(image);
+    color_filter(image, color_filtered_image);
     
     cvtColor(color_filtered_image, gray, COLOR_RGB2GRAY);
+  
+    trapezoid_roi(image, src, dst, 
+                  T_BOTTOM_WIDTH, T_TOP_WIDTH, T_HEIGHT, T_CAR_HOOD);
     
     M = getPerspectiveTransform(src, dst);
     
@@ -157,61 +164,59 @@ Mat perspective_transform(Mat image)
     threshold(gray,binary_threshold, 0, 255, THRESH_BINARY);
 
     warpPerspective(binary_threshold, binary_warped, M, image.size(), INTER_LINEAR);
-
-    return binary_warped;
-
 }
 
 
-Mat get_histogram(Mat binary_warped)
+void get_histogram(Mat const& binary_warped, Mat& histogram)
 {
-  Mat histogram;
-  Mat half_image;
+  cv::Mat half_image = binary_warped(cv::Rect(0, binary_warped.rows / 2, binary_warped.cols, binary_warped.rows / 2));
+	cv::reduce(half_image / 255, histogram, 0, REDUCE_SUM, CV_32FC1);
 
-  half_image = binary_warped(Rect(0, binary_warped.rows / 2, binary_warped.cols, binary_warped.rows / 2));
-	reduce(half_image / 255, histogram, 0, REDUCE_SUM, CV_32FC2);
-
-	return histogram;
+	return;
 }
 
-Mat sliding_window(Mat binary_warped, Mat& left_fit, Mat& right_fit)
+void calculate_lane_histogram(const Mat& histogram, Point& left_peak, Point& right_peak)
 {
-   
+  int midpoint;
+  Mat left_x_base;
+  Mat right_x_base;
+  midpoint = histogram.cols / 2;
+  left_x_base = histogram.colRange(0,midpoint);
+  right_x_base = histogram.colRange(midpoint,histogram.cols);
+
+  minMaxLoc(left_x_base, NULL, NULL, NULL, &left_peak);
+  minMaxLoc(right_x_base,NULL, NULL, NULL, &right_peak);
+
+  right_peak = right_peak + Point(midpoint, 0);
+}
+
+void sliding_window(Mat& binary_warped, vector<float>& left_fit_x, vector<float>& right_fit_x, vector<float>& ploty, Mat& output_image)
+{
     int N_windows;
     int window_width;
     int window_height;
-    int midpoint;
+    Mat left_fit, right_fit;
 
-    Mat left_x_base;
-    Mat right_x_base;
-    Point left_peak, right_peak;
-    
     Mat histogram;
-    Mat output_image;
+    Point left_peak, right_peak;
+  
     Mat gray_tmp;
 
     N_windows = 9;
-    window_width = 80;
+    window_width = 110;
     window_height = binary_warped.rows / N_windows;
 
     gray_tmp = binary_warped.clone();
 
-    cvtColor(binary_warped, output_image, COLOR_GRAY2BGR);
-
-    histogram = get_histogram(gray_tmp);
-    midpoint = histogram.cols / 2;
-    left_x_base = histogram.colRange(0,midpoint);
-    right_x_base = histogram.colRange(midpoint,histogram.cols);
-
-    minMaxLoc(left_x_base, NULL, NULL, NULL, &left_peak);
-    minMaxLoc(right_x_base,NULL, NULL, NULL, &right_peak);
-
-    right_peak = right_peak + Point(midpoint, 0);
+   get_histogram(binary_warped, histogram);
+   calculate_lane_histogram(histogram, left_peak, right_peak);
 
     Window window_left(binary_warped, left_peak.x, binary_warped.rows - window_height, window_width, window_height, 50);
     Window window_right(binary_warped, right_peak.x, binary_warped.rows - window_height, window_width, window_height, 50);
 
     vector<Window> left_boxes, right_boxes;
+
+    cvtColor(binary_warped, output_image, COLOR_GRAY2RGB);
 
     for(int i = 0; i < N_windows; ++i)
     {
@@ -229,56 +234,40 @@ Mat sliding_window(Mat binary_warped, Mat& left_fit, Mat& right_fit)
     left_fit = polyfit_windows(left_boxes);
     right_fit = polyfit_windows(right_boxes);
 
-    return output_image;
- 
+    ploty = linespace(0.0, (float)output_image.rows - 1, output_image.rows);
+
+    poly_fit_x(ploty, left_fit_x, left_fit);
+    poly_fit_x(ploty, right_fit_x, right_fit);
 }
 
-Mat inverse_perspective(Mat binary_warped, Mat original)
+Mat inverse_perspective(Mat& binary_warped, Mat& original)
 {
     Mat sliding_window_output;
-    vector<double> left_fit_x, right_fit_x, ploty;
+    
     Mat Minv(2,4,CV_32FC2);
-    Mat left_fit, right_fit;
     Mat output_image;
     Mat color_warp = Mat::zeros(original.size(), CV_8UC3);
     vector<Point2f> src,dst;
+    vector<float> left_fit_x, right_fit_x, ploty;
 
-    int width = binary_warped.size().width;
-    int height = binary_warped.size().height;
+    sliding_window(binary_warped,left_fit_x, right_fit_x, ploty, sliding_window_output);
 
-    double trap_bottom_width = 0.7; 
-    double trap_top_width = 0.1; 
-    double trap_height = 0.38; 
+    
 
-    sliding_window_output = sliding_window(binary_warped, left_fit, right_fit);
-
-    src.push_back(Point2d( (width * (1 - trap_bottom_width)) / 2, (double)(height - 50)));
-    src.push_back(Point2d( (width * (1 - trap_top_width)) / 2, height - height * trap_height));
-    src.push_back(Point2d( width - (width * (1 - trap_top_width)) / 2, height - height * trap_height));
-    src.push_back(Point2d( width - (width * (1 - trap_bottom_width)) / 2, (double)(height - 50)));
-
-    dst.push_back(Point2d( ( width * (1 - trap_bottom_width)) / 2 , (double)height));
-    dst.push_back(Point2d( ( width * (1 - trap_bottom_width)) / 2, 0.0));
-    dst.push_back(Point2d( width - (width * (1 - trap_bottom_width)) / 2, 0.0));
-    dst.push_back(Point2d( width - (width * (1 - trap_bottom_width)) / 2, (double)height));
+    trapezoid_roi(sliding_window_output, src, dst, 
+                  T_BOTTOM_WIDTH, T_TOP_WIDTH, T_HEIGHT, T_CAR_HOOD);
 
     Minv = getPerspectiveTransform(dst,src);
 
     warpPerspective(sliding_window_output, output_image, Minv, sliding_window_output.size(),INTER_LINEAR);
 
-    ploty = linespace(0, output_image.rows - 1, output_image.rows);
-
-    poly_fit_x(ploty, left_fit_x, left_fit);
-    poly_fit_x(ploty, right_fit_x, right_fit);
-
-    int npoints = (int)ploty.size();
-    vector<Point> pts_left(npoints);
-    vector<Point>  pts_right(npoints);
+    vector<Point2f> pts_left;
+    vector<Point2f>  pts_right;
     vector<Point> pts;
 
-    for (int i = 0; i < npoints; i++) {
-      pts_left.push_back(Point2d((double)left_fit_x[i], (double)ploty[i])); 
-      pts_right.push_back(Point2d((double)right_fit_x[i], (double)ploty[i]));
+    for (int i = 0; i < ploty.size(); i++) {
+      pts_left.push_back(Point2f((float)left_fit_x[i], (float)ploty[i])); 
+      pts_right.push_back(Point2f((float)right_fit_x[i], (float)ploty[i]));
     }
 
     pts.reserve(2 * ploty.size());

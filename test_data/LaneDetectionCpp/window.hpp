@@ -23,12 +23,9 @@ class Window
         int width, height;
         int min_pix;
         Mat window;
-        vector<Point> non_zero;
-        vector<double> non_zero_x;
-        vector<double> non_zero_y;
-
+        vector<Point2f> non_zero;
+        vector<float> non_zero_x;
       
-
     public:
 
         Window() : x_left(0), x_right(0), y_top(0), y_bottom(0), x_center(0),
@@ -36,25 +33,8 @@ class Window
 
         Window(Mat& binary_warped, int x_center, int y_top,
 		int width, int height, int min_pix);
-
-        vector<double> get_non_zero_x(void) { return non_zero_x; }
-        vector<double> get_non_zero_y(void) { return non_zero_y; }
-
        
         void get_indices(Mat&, Mat&) const;
-
-        double trim_mean(vector<double>& arr, double proportion, int x_margin)
-        {
-            int trim = (int)(arr.size() * proportion);
-
-            arr.erase(arr.begin(), arr.begin() + trim);
-            arr.erase(arr.end() - trim, arr.end());
-
-            double average = (double)(accumulate( arr.begin(), arr.end(), 0.0) + arr.size()*x_margin) / arr.size();
-
-            return average;
-
-        }
 
         int count_nonzero(void) const { return (int)non_zero.size(); }
         const Point get_bottom_left_point(void) const { return Point(x_left, y_bottom);}
@@ -62,7 +42,5 @@ class Window
         Window get_next_window(Mat& binary_warped);
 
 };
-
-
 
 #endif
