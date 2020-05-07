@@ -34,12 +34,11 @@ class Window
         Window(Mat& binary_warped, int x_center, int y_top,
 		int width, int height, int min_pix);
        
-        void get_indices(Mat&, Mat&) const;
-
         int count_nonzero(void) const { return (int)non_zero.size(); }
         const Point get_bottom_left_point(void) const { return Point(x_left, y_bottom);}
         const Point get_top_right_point(void) const { return Point(x_right, y_top); }
-        Window get_next_window(Mat& binary_warped);
+        void get_indices(Mat&, Mat&) const;
+        Window get_next_window(Mat&);
 
 };
 

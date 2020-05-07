@@ -11,7 +11,7 @@ Window::Window(Mat& binary_warped, int x_center, int y_top, int width, int heigh
     this->height = height;
     this->min_pix = min_pix;
 
-    margin = this->width / 2;
+    margin = this->width;
     this->x_left = this->x_center - margin;
     this->y_bottom = y_top + this->height;
     this->x_right = this->x_center + margin;
@@ -33,7 +33,11 @@ Window Window::get_next_window(Mat& binary_warped)
     int cnt_nonzeros;
     cnt_nonzeros = count_nonzero();
 
-    if(this->y_top == 0) return Window(); //if it's the end of window chain
+    if(this->y_top == 0)
+    {
+        Window result(binary_warped, this->x_center, this->y_top, this->width, this->height, this->min_pix);
+        return result;
+    } 
 
     int new_y_top = y_top - height;
     int new_x_center = x_center;
@@ -43,11 +47,22 @@ Window Window::get_next_window(Mat& binary_warped)
         new_x_center = (int)(accumulate( non_zero_x.begin(), non_zero_x.end(), 0.0) / cnt_nonzeros) + x_left;
     }
 
-    if(new_x_center + this->width / 2 > binary_warped.cols) return Window();
+    if(new_x_center + this->width >= binary_warped.cols )
+    {
+        Window result(binary_warped, binary_warped.cols - this->width , new_y_top, this->width, this->height, this->min_pix);
+        return result;    
+    }
+    else if(new_x_center - this->width <= 0)
+    {
+        Window result(binary_warped, this->width , new_y_top, this->width, this->height, this->min_pix);
+        return result;
 
-    Window result(binary_warped, new_x_center, new_y_top, this->width, this->height, this->min_pix);
+    } else {
+        Window result(binary_warped, new_x_center, new_y_top, this->width, this->height, this->min_pix);
+        return result;
+    }
+
     
-    return result;
 }
 
 
