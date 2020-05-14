@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Site BuildName="Win32-ninja"
+	BuildStamp="20200508-2025-Experimental"
+	Name="DESKTOP-LDML06K"
+	Generator="ctest-3.17.1"
+	CompilerName="C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.25.28610/bin/Hostx64/x64/cl.exe"
+	CompilerVersion="19.25.28614.0"
+	OSName="Windows"
+	Hostname="DESKTOP-LDML06K"
+	OSRelease=" Professional"
+	OSVersion=" (Build 18362)"
+	OSPlatform="AMD64"
+	Is64Bits="1"
+	VendorString="GenuineIntel"
+	VendorID="Intel Corporation"
+	FamilyID="6"
+	ModelID="13"
+	ProcessorCacheSize="-1"
+	NumberOfLogicalCPU="4"
+	NumberOfPhysicalCPU="2"
+	TotalVirtualMemory="10314"
+	TotalPhysicalMemory="8091"
+	LogicalProcessorsPerPhysical="2"
+	ProcessorClockFrequency="2396"
+	>
+	<Testing>
+		<StartDateTime>May 08 22:31 Central Europe Daylight Time</StartDateTime>
+		<StartTestTime>1588969912</StartTestTime>
+		<TestList/>
+		<EndDateTime>May 08 22:31 Central Europe Daylight Time</EndDateTime>
+		<EndTestTime>1588969912</EndTestTime>
+		<ElapsedMinutes>0</ElapsedMinutes>
+	</Testing>
+</Site>

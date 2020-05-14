@@ -1,6 +1,15 @@
 #include "functions.hpp"
 
-void color_filter(const Mat& image, Mat& filtered_image)
+LaneDetection::LaneDetection()
+{
+  trap_bottom_width = 0.7f; 
+  trap_top_width = 0.1f; 
+  trap_height = 0.38f;
+  car_hood = 50;
+
+}
+
+void LaneDetection::color_filter(Mat& filtered_image)
 {
     Mat mask1;
     Mat mask2;
@@ -8,25 +17,25 @@ void color_filter(const Mat& image, Mat& filtered_image)
     Mat white_image;
     Mat yellow_image;
 
-    cv::inRange(image, Scalar(200,200,200), Scalar(255,255,255), mask1);
+    cv::inRange(frame, Scalar(200,200,200), Scalar(255,255,255), mask1);
 
-    cvtColor(image, image_hsv, COLOR_RGB2HSV);
+    cvtColor(frame, image_hsv, COLOR_RGB2HSV);
     //cv::inRange(image_hsv, Scalar(20,90,100), Scalar(50,255,255), mask2);
 
     cv::inRange(image_hsv, Scalar(90,72,100), Scalar(110,255,255), mask2);
 
-    cv::bitwise_and(image, image, white_image, mask1);
+    cv::bitwise_and(frame, frame, white_image, mask1);
     
-    cv::bitwise_and(image, image, yellow_image, mask2);
+    cv::bitwise_and(frame, frame, yellow_image, mask2);
     
     addWeighted(white_image, 1., yellow_image, 1., 0., filtered_image);
     
 }
 
-void trapezoid_roi(const Mat& image, vector<Point2f>& src, vector<Point2f>& dst, float trap_bottom_width, float trap_top_width , float trap_height, float car_hood)
+void LaneDetection::trapezoid_roi()
 {
-    int width = (int)image.size().width;
-    int height = (int)image.size().height;
+    int width = (int)frame.size().width;
+    int height = (int)frame.size().height;
 
     src.push_back(Point2f( (width * (1 - trap_bottom_width)) / 2, height - car_hood));
     src.push_back(Point2f( (width * (1 - trap_top_width)) / 2, height - height * trap_height));
@@ -42,9 +51,7 @@ void trapezoid_roi(const Mat& image, vector<Point2f>& src, vector<Point2f>& dst,
 
 }
 
-
-
-void perspective_transform(const Mat& color_filtered_image, vector<Point2f>& src, vector<Point2f>& dst, Mat& binary_warped)
+void LaneDetection::perspective_transform(const Mat& color_filtered_image, Mat& binary_warped)
 {
 
   Mat gray;
@@ -55,14 +62,15 @@ void perspective_transform(const Mat& color_filtered_image, vector<Point2f>& src
 
   M = getPerspectiveTransform(src, dst);
   
-  binary_threshold =  Mat::zeros(gray.rows, gray.cols, gray.type());
-  threshold(gray,binary_threshold, 0, 255, THRESH_BINARY);
+  binary_threshold =  Mat::zeros(gray.rows, gray.cols, CV_8UC3);
+  threshold(gray, binary_threshold, 0, 255, THRESH_BINARY);
 
   warpPerspective(binary_threshold, binary_warped, M, color_filtered_image.size(), INTER_LINEAR);
+  
 
 }
 
-void get_histogram(Mat const& binary_warped, Mat& histogram)
+void LaneDetection::get_histogram(Mat const& binary_warped, Mat& histogram)
 {
   cv::Mat half_image = binary_warped(cv::Rect(0, binary_warped.rows / 2, binary_warped.cols, binary_warped.rows / 2));
 	cv::reduce(half_image / 255, histogram, 0, REDUCE_SUM, CV_32FC1);
@@ -70,7 +78,7 @@ void get_histogram(Mat const& binary_warped, Mat& histogram)
 	return;
 }
 
-void calculate_lane_histogram(const Mat& histogram, Point& left_peak, Point& right_peak)
+void LaneDetection::calculate_lane_histogram(const Mat& histogram, Point& left_peak, Point& right_peak)
 {
   int midpoint;
   Mat left_x_base;
@@ -85,7 +93,7 @@ void calculate_lane_histogram(const Mat& histogram, Point& left_peak, Point& rig
   right_peak = right_peak + Point(midpoint, 0);
 }
 
-void sliding_window(Mat& binary_warped, Point& left_peak, Point& right_peak, Mat& output_image, vector<Window>& left_boxes, vector<Window>& right_boxes)
+void LaneDetection::sliding_window(Mat& binary_warped, Point& left_peak, Point& right_peak, Mat& output_image, vector<Window>& left_boxes, vector<Window>& right_boxes)
 {
   int N_windows;
   int window_width;
@@ -94,7 +102,7 @@ void sliding_window(Mat& binary_warped, Point& left_peak, Point& right_peak, Mat
   Mat gray_tmp;
 
   N_windows = 9;
-  window_width = 120;
+  window_width = 80;
   window_height = binary_warped.rows / N_windows;
 
   gray_tmp = binary_warped.clone();
@@ -104,7 +112,7 @@ void sliding_window(Mat& binary_warped, Point& left_peak, Point& right_peak, Mat
 
   cvtColor(binary_warped, output_image, COLOR_GRAY2RGB);
 
-  for(int i = 0; i < N_windows; ++i)
+  for(int i = 0; i < N_windows; i++)
   {
       rectangle(output_image, window_left.get_bottom_left_point(), window_left.get_top_right_point(), Scalar(0,255, 0), 2);
       rectangle(output_image, window_right.get_bottom_left_point(), window_right.get_top_right_point(), Scalar(0,255, 0), 2);
@@ -119,7 +127,7 @@ void sliding_window(Mat& binary_warped, Point& left_peak, Point& right_peak, Mat
 
 }
 
-Mat polyfit_windows(vector<Window> const& windows)
+Mat LaneDetection::polyfit_windows(vector<Window> const& windows)
 {
 	int n = (int)windows.size();
 
@@ -150,7 +158,7 @@ Mat polyfit_windows(vector<Window> const& windows)
 
 }
 
-void polyfit(const Mat& src_x, const Mat& src_y, Mat& dst, int order)
+void LaneDetection::polyfit(const Mat& src_x, const Mat& src_y, Mat& dst, int order)
 {
 
   CV_Assert((src_x.rows > 0) && (src_y.rows > 0) && (src_x.cols == 1) && (src_y.cols == 1)
@@ -179,7 +187,7 @@ void polyfit(const Mat& src_x, const Mat& src_y, Mat& dst, int order)
 
 }
 
-vector<float> linspace(float start_in, float end_in, int num_in)
+vector<float> LaneDetection::linspace(float start_in, float end_in, int num_in)
 {
   vector<float> linspaced;
 
@@ -205,7 +213,7 @@ vector<float> linspace(float start_in, float end_in, int num_in)
   return linspaced;
 }
 
-void poly_fit_x(vector<float> const& ploty, std::vector<float>& fit_x, Mat const& line_fit)
+void LaneDetection::poly_fit_x(vector<float> const& ploty, vector<float>& fit_x, Mat const& line_fit)
 {
 	for (auto const& y : ploty) {
 		float x = line_fit.at<float>(2, 0) * y * y + line_fit.at<float>(1, 0) * y + line_fit.at<float>(0, 0);
@@ -215,7 +223,7 @@ void poly_fit_x(vector<float> const& ploty, std::vector<float>& fit_x, Mat const
 	return;
 }
 
-void inverse_perspective(const Mat& sliding_window_output, vector<Point2f>& src, vector<Point2f>& dst, Mat& Minv, Mat& output_image)
+void LaneDetection::inverse_perspective(const Mat& sliding_window_output, Mat& Minv, Mat& output_image)
 {
   Mat color_warp = Mat::zeros(sliding_window_output.size(), CV_8UC3);
 
@@ -224,7 +232,7 @@ void inverse_perspective(const Mat& sliding_window_output, vector<Point2f>& src,
 
 }
 
-void get_inverse_points(vector<float>& plot_y, vector<float>& left_fit_x, vector<float>& right_fit_x, Mat& color_warp)
+void LaneDetection::get_inverse_points(vector<float>& plot_y, vector<float>& left_fit_x, vector<float>& right_fit_x, Mat& color_warp)
 {
   vector<Point2f> pts_left;
   vector<Point2f>  pts_right;
@@ -244,7 +252,7 @@ void get_inverse_points(vector<float>& plot_y, vector<float>& left_fit_x, vector
   fillPoly(color_warp, ptsarray, Scalar(0, 255, 0));
 }
 
-void final_perspective(const Mat& color_warp, const Mat& original_image, Mat& Minv, Mat& output_image)
+void LaneDetection::final_perspective(const Mat& color_warp, const Mat& original_image, Mat& Minv, Mat& output_image)
 {
   Mat new_warp;
 
@@ -252,10 +260,31 @@ void final_perspective(const Mat& color_warp, const Mat& original_image, Mat& Mi
   addWeighted(original_image, 1, new_warp, 0.3, 0, output_image);
 }
 
-Mat pipeline(Mat& original_frame)
+void LaneDetection::init(string file_name, string output_file)
+{
+  capture.open(file_name);
+
+  int frame_width = (int)capture.get(CAP_PROP_FRAME_WIDTH);
+  int frame_height = (int)capture.get(CAP_PROP_FRAME_HEIGHT);
+  video_output.open(output_file, -1, 25.0, Size(frame_width,frame_height),true);
+  
+  if( !capture.isOpened() )
+      throw "Error when reading steam_mp4";
+
+  if (!video_output.isOpened())
+  {
+      cout << "!!! Output video could not be opened" << endl;
+      return;
+  }
+
+  if(capture.read(frame))
+    trapezoid_roi();
+
+}
+
+bool LaneDetection::frame_processing()
 {
   Mat filtered_image;
-  vector<Point2f> src, dst;
   Mat binary_warped;
   Mat histogram;
   Point left_peak, right_peak;
@@ -263,17 +292,14 @@ Mat pipeline(Mat& original_frame)
   Mat left_fit, right_fit;
   vector<float> plot_y, left_fit_x, right_fit_x;
   vector<Window> left_boxes, right_boxes;
-  Mat color_warp = Mat::zeros(original_frame.size(), CV_8UC3);
+  Mat color_warp = Mat::zeros(frame.size(), CV_8UC3);
   Mat inverse_perspective_output;
   Mat Minv(2,4,CV_32FC2);
   Mat output_frame;
 
-  color_filter(original_frame, filtered_image);
+  color_filter(filtered_image);
 
-  trapezoid_roi(filtered_image, src, dst, 
-                  T_BOTTOM_WIDTH, T_TOP_WIDTH, T_HEIGHT, T_CAR_HOOD);
-
-  perspective_transform(filtered_image, src, dst, binary_warped);
+  perspective_transform(filtered_image, binary_warped);
 
   get_histogram(binary_warped, histogram);
 
@@ -291,10 +317,21 @@ Mat pipeline(Mat& original_frame)
 
   get_inverse_points(plot_y, left_fit_x, right_fit_x, color_warp);
 
-  inverse_perspective(sliding_window_output, src, dst, Minv, inverse_perspective_output);
+  inverse_perspective(sliding_window_output, Minv, inverse_perspective_output);
 
-  final_perspective(color_warp, original_frame, Minv, output_frame);
+  final_perspective(color_warp, frame, Minv, output_frame);
 
-  return output_frame;
+  video_output.write(output_frame);
+
+  return capture.read(frame);
+}
+
+void LaneDetection::release()
+{
+
+  cout << "SAVED." << endl;
+  capture.release();
+	video_output.release();
 
 }
+
